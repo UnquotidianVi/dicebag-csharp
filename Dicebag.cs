@@ -1,3 +1,6 @@
+using System.Collections;
+using System.Collections.Generic;
+
 namespace Dicebag {
 
     /// <summary>set of probability functions designed specifically for games</summary>
@@ -67,57 +70,34 @@ namespace Dicebag {
 
         /// <summary>Roll one or more dice with advantage or disadvantage (if advantage is not true rolls are disadvantaged). 
         /// Returns the _numOfResults sum of the highest (advantage) or lowest (disadvantage) value of all rolls.</summary>
-        public static int RollSpecialDice(int _numOfDice, int _numOfResults,  bool _advantage,int _numOfSides)
+        private static List<int> _Rolls = new List<int>(16);
+        public static int RollSpecialDice(int _numOfDice, int _numOfResults, bool _advantage, int _numOfSides)
         {
-            int[] rolls = new int[_numOfResults];
+            _Rolls.Clear();
+            if (_Rolls.Capacity < _numOfDice)
+                _Rolls.Capacity = _numOfDice;
 
-            for(int diceIndex = 0; diceIndex < _numOfDice; diceIndex++)
+            for (int i = 0; i < _numOfDice; ++i)
             {
-                int roll = RollDice(1, _numOfSides);
-
-                if(diceIndex < _numOfResults)
-                {
-                    rolls[diceIndex] = roll;
-                }
-                else
-                {
-                    int rolldIndexToReplaceAt = -1;
-
-                    if(_advantage)
-                    {
-                        int lowestRollInRolls = _numOfSides + 1;
-                        for(int rollIndex = 0; rollIndex < rolls.Length; rollIndex++)
-                        {
-                            if(rolls[rollIndex] < lowestRollInRolls && rolls[rollIndex] < roll)
-                            {
-                                lowestRollInRolls = rolls[rollIndex];
-                                rolldIndexToReplaceAt = rollIndex;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        int highestRollInRolls = 0;
-                        for(int rollIndex = 0; rollIndex < rolls.Length; rollIndex++)
-                        {
-                            if(rolls[rollIndex] > highestRollInRolls && rolls[rollIndex] > roll)
-                            {
-                                highestRollInRolls = rolls[rollIndex];
-                                rolldIndexToReplaceAt = rollIndex;
-                            }
-                        }
-                    }
-
-                    if(rolldIndexToReplaceAt != -1)
-                        rolls[rolldIndexToReplaceAt] = roll;
-                }
+                int r = RollDice(1, _numOfSides);
+                _Rolls.Add(r);
             }
 
-            int result = 0;
-            for(int i = 0; i < rolls.Length; i++)
-                result += rolls[i];
-            return result;
+            _Rolls.Sort(CompareSpecialDice);
+            int sum = 0;
+            int start = _advantage ? _numOfDice - _numOfResults : 0;
+            for (int i = 0; i < _numOfResults; ++i)
+                sum += _Rolls[i + start];
+            return sum;
         }
+        private static int CompareSpecialDice(int a, int b) {
+            if (a < b)
+                return -1;
+            if (a > b)
+                return 1;
+            return 0;
+        }
+
 #endregion
 
 #region RollCustomDice
